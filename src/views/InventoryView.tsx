@@ -3,12 +3,17 @@ import { Plus, Search, Edit, Trash2, Package, AlertTriangle, Wifi, WifiOff, Refr
 import { db, type Product } from '../lib/database';
 import { useProducts, useCategories } from '../lib/hooks/useDynamicData';
 import { useRealTimeData } from '../lib/hooks/useRealTimeData';
+import { useForceRefreshCurrency } from '../lib/hooks/useCurrencySync';
+import { formatCurrency } from '../lib/currency';
 
 const InventoryView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  
+  // Force refresh when currency changes
+  useForceRefreshCurrency();
 
   // Use dynamic data hooks for real-time updates
   const { 
@@ -275,7 +280,7 @@ const InventoryView: React.FC = () => {
               <span className="text-sm font-medium text-gray-600">Total Value</span>
             </div>
             <p className="text-2xl font-bold text-gray-900">
-              ${products?.reduce((sum, p) => sum + (p.price * p.stock), 0).toFixed(2) || '0.00'}
+              {formatCurrency(products?.reduce((sum, p) => sum + (p.price * p.stock), 0) || 0)}
             </p>
           </div>
         </div>
@@ -351,7 +356,7 @@ const InventoryView: React.FC = () => {
                     {product.sku}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${product.price.toFixed(2)}
+                    {formatCurrency(product.price)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${

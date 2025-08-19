@@ -3,8 +3,12 @@ import { Search, Plus, Minus } from 'lucide-react';
 import { usePOSStore } from '../lib/store';
 import { db, type Product, type Category } from '../lib/database';
 import { formatCurrency } from '../lib/currency';
+import { useForceRefreshCurrency } from '../lib/hooks/useCurrencySync';
 
 const ProductGrid: React.FC = () => {
+  // Force refresh when currency changes
+  useForceRefreshCurrency();
+
   const {
     productSearchTerm,
     selectedCategory,

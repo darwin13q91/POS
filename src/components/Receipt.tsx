@@ -1,6 +1,7 @@
 import React from 'react';
 import { type Sale, type Product } from '../lib/database';
 import { formatCurrency } from '../lib/currency';
+import { useForceRefreshCurrency } from '../lib/hooks/useCurrencySync';
 
 interface ReceiptProps {
   sale: Sale;
@@ -10,6 +11,9 @@ interface ReceiptProps {
 }
 
 const Receipt: React.FC<ReceiptProps> = ({ sale, products, onClose, onPrint }) => {
+  // Force refresh when currency changes
+  useForceRefreshCurrency();
+  
   const getProductName = (productId: number) => {
     const product = products.find(p => p.id === productId);
     return product?.name || 'Unknown Product';

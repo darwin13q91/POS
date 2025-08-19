@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/database';
 import { PayrollCalculator } from '../lib/payroll';
+import { formatCurrency } from '../lib/currency';
 import type { Employee, PayrollPeriod, PayrollRecord, TimeEntry } from '../lib/database';
 
 export const PayrollView: React.FC = () => {
@@ -93,12 +94,8 @@ export const PayrollView: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
+  // Use the imported formatCurrency function which respects global currency settings
+  // formatCurrency function is already imported and will use dynamic currency
 
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString();

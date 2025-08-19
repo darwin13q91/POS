@@ -39,6 +39,14 @@ function App() {
         
         initializeRemoteMaintenance(maintenanceConfig);
 
+        // Initialize currency cache from database
+        try {
+          const { getCurrentCurrency } = await import('./lib/currency');
+          await getCurrentCurrency(); // This will cache the currency setting
+        } catch (currencyError) {
+          console.error('Failed to initialize currency cache:', currencyError);
+        }
+
         // Check for existing user session
         const existingUser = authService.getCurrentUser();
         if (existingUser) {
@@ -73,6 +81,23 @@ function App() {
       return currentUser.role === 'superadmin' || allowedRoles.includes(currentUser.role);
     };
 
+    // Access denied component with better styling
+    const AccessDeniedComponent = ({ viewName }: { viewName: string }) => (
+      <div className="flex-1 flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8">
+          <div className="w-24 h-24 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636"/>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-600 mb-1">You don't have permission to access {viewName}.</p>
+          <p className="text-sm text-gray-500">Current role: <span className="font-medium text-gray-700">{currentUser.role}</span></p>
+        </div>
+      </div>
+    );
+
     switch (currentView) {
       case 'pos':
         return <POSView />;
@@ -86,19 +111,20 @@ function App() {
         return <SettingsView />;
       case 'payroll':
         return hasAccess(['owner', 'manager']) ? 
-          <PayrollView /> : <div>Access Denied</div>;
+          <PayrollView /> : <AccessDeniedComponent viewName="Payroll Management" />;
       case 'employees':
         return hasAccess(['owner', 'manager']) ? 
-          <EmployeeManagement /> : <div>Access Denied</div>;
+          <EmployeeManagement /> : <AccessDeniedComponent viewName="Employee Management" />;
       case 'timetracking':
         return hasAccess(['owner', 'manager', 'staff']) ? 
-          <TimeTrackingView /> : <div>Access Denied</div>;
+          <TimeTrackingView /> : <AccessDeniedComponent viewName="Time Tracking" />;
       case 'debug':
-        return hasAccess(['developer']) ? <DebugView /> : <div>Access Denied</div>;
+        return hasAccess(['developer']) ? <DebugView /> : <AccessDeniedComponent viewName="Debug Console" />;
       case 'support':
-        return hasAccess(['support']) ? <SupportView /> : <div>Access Denied</div>;
+        return hasAccess(['support']) ? <SupportView /> : <AccessDeniedComponent viewName="Support Dashboard" />;
       case 'system':
-        return currentUser.role === 'superadmin' ? <SuperAdminView /> : <div>Access Denied</div>;
+        return currentUser.role === 'superadmin' ? 
+          <SuperAdminView /> : <AccessDeniedComponent viewName="System Control Panel" />;
       default:
         return <POSView />;
     }

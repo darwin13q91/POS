@@ -31,10 +31,91 @@ export const CURRENCIES: Record<string, CurrencyConfig> = {
   RUB: { code: 'RUB', symbol: '₽', name: 'Russian Ruble', decimals: 2, locale: 'ru-RU' }
 };
 
-// Get current currency from settings
-export function getCurrentCurrency(): CurrencyConfig {
+// Force refresh currency cache from database
+export async function refreshCurrencyCache(): Promise<void> {
   try {
-    // Try to get from localStorage first
+    const { db } = await import('./database');
+    const currencyConfig = await db.systemConfigs
+      .where('key')
+      .equals('currency_code')
+      .first();
+    
+    if (currencyConfig && currencyConfig.value && CURRENCIES[currencyConfig.value]) {
+      localStorage.setItem('pos-cached-currency', currencyConfig.value);
+      
+      // Also trigger a page refresh event to update all components
+      window.dispatchEvent(new CustomEvent('currencyChanged', { 
+        detail: { currencyCode: currencyConfig.value } 
+      }));
+    }
+  } catch (error) {
+    console.error('Error refreshing currency cache:', error);
+  }
+}
+
+// Get current currency from settings
+export async function getCurrentCurrency(): Promise<CurrencyConfig> {
+  try {
+    // Try to get from database first (most authoritative)
+    const { db } = await import('./database');
+    const currencyConfig = await db.systemConfigs
+      .where('key')
+      .equals('currency_code')
+      .first();
+    
+    if (currencyConfig && currencyConfig.value && CURRENCIES[currencyConfig.value]) {
+      // Cache the currency setting for sync access
+      localStorage.setItem('pos-cached-currency', currencyConfig.value);
+      return CURRENCIES[currencyConfig.value];
+    }
+
+    // Fallback to localStorage
+    const savedSettings = localStorage.getItem('pos-system-settings');
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      if (settings.currency && CURRENCIES[settings.currency]) {
+        // Cache this setting as well
+        localStorage.setItem('pos-cached-currency', settings.currency);
+        return CURRENCIES[settings.currency];
+      }
+    }
+    
+    // Final fallback to USD
+    localStorage.setItem('pos-cached-currency', 'USD');
+    return CURRENCIES.USD;
+  } catch (error) {
+    console.error('Error getting current currency:', error);
+    // Emergency fallback to localStorage only
+    try {
+      const savedSettings = localStorage.getItem('pos-system-settings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        if (settings.currency && CURRENCIES[settings.currency]) {
+          localStorage.setItem('pos-cached-currency', settings.currency);
+          return CURRENCIES[settings.currency];
+        }
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+    localStorage.setItem('pos-cached-currency', 'USD');
+    return CURRENCIES.USD;
+  }
+}
+
+// Synchronous version for compatibility - now checks database cache
+export function getCurrentCurrencySync(): CurrencyConfig {
+  try {
+    // Check if we have a cached database currency setting
+    const cachedCurrency = localStorage.getItem('pos-cached-currency');
+    if (cachedCurrency) {
+      const currencyCode = cachedCurrency;
+      if (CURRENCIES[currencyCode]) {
+        return CURRENCIES[currencyCode];
+      }
+    }
+    
+    // Try localStorage settings as fallback
     const savedSettings = localStorage.getItem('pos-system-settings');
     if (savedSettings) {
       const settings = JSON.parse(savedSettings);
@@ -43,11 +124,11 @@ export function getCurrentCurrency(): CurrencyConfig {
       }
     }
     
-    // Fallback to PHP as default
-    return CURRENCIES.PHP;
+    // Fallback to USD
+    return CURRENCIES.USD;
   } catch (error) {
-    console.error('Error getting current currency:', error);
-    return CURRENCIES.PHP;
+    console.error('Error getting current currency sync:', error);
+    return CURRENCIES.USD;
   }
 }
 
@@ -57,7 +138,7 @@ export function formatCurrency(
   currencyCode?: string, 
   options: Partial<Intl.NumberFormatOptions> = {}
 ): string {
-  const currency = currencyCode ? CURRENCIES[currencyCode] : getCurrentCurrency();
+  const currency = currencyCode ? CURRENCIES[currencyCode] : getCurrentCurrencySync();
   
   if (!currency) {
     // Fallback formatting
@@ -84,7 +165,7 @@ export function formatCurrency(
 
 // Format currency without symbol (numbers only)
 export function formatCurrencyNumber(amount: number, currencyCode?: string): string {
-  const currency = currencyCode ? CURRENCIES[currencyCode] : getCurrentCurrency();
+  const currency = currencyCode ? CURRENCIES[currencyCode] : getCurrentCurrencySync();
   
   if (!currency) {
     return amount.toFixed(2);
@@ -104,7 +185,7 @@ export function formatCurrencyNumber(amount: number, currencyCode?: string): str
 
 // Get currency symbol
 export function getCurrencySymbol(currencyCode?: string): string {
-  const currency = currencyCode ? CURRENCIES[currencyCode] : getCurrentCurrency();
+  const currency = currencyCode ? CURRENCIES[currencyCode] : getCurrentCurrencySync();
   return currency?.symbol || '$';
 }
 
@@ -140,7 +221,7 @@ export function convertCurrency(
 
 // Format for display in tables/lists (shorter format)
 export function formatCurrencyCompact(amount: number, currencyCode?: string): string {
-  const currency = currencyCode ? CURRENCIES[currencyCode] : getCurrentCurrency();
+  const currency = currencyCode ? CURRENCIES[currencyCode] : getCurrentCurrencySync();
   
   if (!currency) {
     return `$${amount.toFixed(2)}`;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, User, Mail, Phone, Calendar } from 'lucide-react';
 import { db, type Customer } from '../lib/database';
+import { formatCurrency } from '../lib/currency';
 
 const CustomersView: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -212,9 +213,9 @@ const CustomersView: React.FC = () => {
               <span className="text-sm font-medium text-gray-600">Avg Purchase</span>
             </div>
             <p className="text-2xl font-bold text-orange-600">
-              ${customers.length > 0 ? 
-                (customers.reduce((sum, c) => sum + c.totalPurchases, 0) / customers.length).toFixed(2) :
-                '0.00'
+              {customers.length > 0 ? 
+                formatCurrency(customers.reduce((sum, c) => sum + c.totalPurchases, 0) / customers.length) :
+                formatCurrency(0)
               }
             </p>
           </div>
@@ -296,7 +297,7 @@ const CustomersView: React.FC = () => {
                     <div className="text-sm text-gray-500">{customer.phone}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${customer.totalPurchases.toFixed(2)}
+                    {formatCurrency(customer.totalPurchases)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {customer.lastPurchase ? 

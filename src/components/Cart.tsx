@@ -3,9 +3,13 @@ import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Smartphone } f
 import { usePOSStore } from '../lib/store';
 import { db, type Sale, type Product } from '../lib/database';
 import { formatCurrency } from '../lib/currency';
+import { useForceRefreshCurrency } from '../lib/hooks/useCurrencySync';
 import Receipt from './Receipt';
 
 const Cart: React.FC = () => {
+  // Force refresh when currency changes
+  useForceRefreshCurrency();
+  
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
   const [products, setProducts] = useState<Product[]>([]);

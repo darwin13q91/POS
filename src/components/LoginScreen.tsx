@@ -85,32 +85,35 @@ export default function LoginScreen({ onLogin }: LoginProps) {
           {Object.keys(roleConfigs).length === 0 ? (
             <div className="text-center py-4 text-gray-500">Loading roles...</div>
           ) : (
-            Object.entries(roleConfigs).map(([key, config]) => (
-              <button
-                key={key}
-                onClick={() => handleDemoLogin(config.role)}
-                disabled={isLoading}
-                className={`w-full p-4 rounded-lg border-2 transition-all hover:shadow-md ${
-                  selectedRole === config.role
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300'
-                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-full ${getRoleColor(config.role)}`}>
-                    <User className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <div className="font-semibold text-gray-900">{config.label}</div>
-                    <div className="text-sm text-gray-500">{config.description}</div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      Access Level: {config.accessLevel}/5
+            // Filter to show only Staff, Manager, and Owner roles
+            Object.entries(roleConfigs)
+              .filter(([key]) => ['staff', 'manager', 'owner'].includes(key))
+              .map(([key, config]) => (
+                <button
+                  key={key}
+                  onClick={() => handleDemoLogin(config.role)}
+                  disabled={isLoading}
+                  className={`w-full p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+                    selectedRole === config.role
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-blue-300'
+                  } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-full ${getRoleColor(config.role)}`}>
+                      <User className="h-4 w-4" />
                     </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-gray-900">{config.label}</div>
+                      <div className="text-sm text-gray-500">{config.description}</div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Access Level: {config.accessLevel}/5
+                      </div>
+                    </div>
+                    <LogIn className="h-4 w-4 text-gray-400" />
                   </div>
-                  <LogIn className="h-4 w-4 text-gray-400" />
-                </div>
-              </button>
-            ))
+                </button>
+              ))
           )}
         </div>
 

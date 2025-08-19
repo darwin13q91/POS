@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, DollarSign, ShoppingCart, Calendar, BarChart3, PieChart, Users } from 'lucide-react';
 import { db, type Sale } from '../lib/database';
+import { formatCurrency } from '../lib/currency';
 
 interface DailySales {
   date: string;
@@ -183,7 +184,7 @@ const AnalyticsView: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-green-600">${metrics.totalRevenue.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(metrics.totalRevenue)}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <DollarSign className="h-6 w-6 text-green-600" />
@@ -215,7 +216,7 @@ const AnalyticsView: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
-                <p className="text-2xl font-bold text-purple-600">${metrics.averageOrderValue.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-purple-600">{formatCurrency(metrics.averageOrderValue)}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
                 <BarChart3 className="h-6 w-6 text-purple-600" />
@@ -268,7 +269,7 @@ const AnalyticsView: React.FC = () => {
                         </div>
                       </div>
                       <div className="w-16 text-right text-sm font-medium text-gray-900">
-                        ${day.revenue.toFixed(0)}
+                        {formatCurrency(day.revenue)}
                       </div>
                     </div>
                   );
@@ -296,7 +297,7 @@ const AnalyticsView: React.FC = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900">${product.revenue.toFixed(2)}</p>
+                      <p className="font-semibold text-gray-900">{formatCurrency(product.revenue)}</p>
                     </div>
                   </div>
                 ))}
@@ -318,7 +319,7 @@ const AnalyticsView: React.FC = () => {
                       <span className="font-medium text-gray-900 capitalize">{method.method}</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-gray-900">${method.amount.toFixed(2)}</div>
+                      <div className="font-semibold text-gray-900">{formatCurrency(method.amount)}</div>
                       <div className="text-sm text-gray-500">{method.percentage.toFixed(1)}%</div>
                     </div>
                   </div>
@@ -337,7 +338,7 @@ const AnalyticsView: React.FC = () => {
                 {sales.slice(0, 5).map((sale, index) => (
                   <div key={index} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
                     <div>
-                      <p className="font-medium text-gray-900">${sale.total.toFixed(2)}</p>
+                      <p className="font-medium text-gray-900">{formatCurrency(sale.total)}</p>
                       <p className="text-sm text-gray-500 capitalize">{sale.paymentMethod}</p>
                     </div>
                     <div className="text-right">

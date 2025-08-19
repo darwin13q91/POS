@@ -173,16 +173,6 @@ export default function LoginForm({ onLogin, onSwitchToDemo }: LoginFormProps) {
             🔒 Your session will automatically logout after 8 hours of inactivity for security.
           </p>
         </div>
-
-        {/* Default Credentials for Testing */}
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-          <p className="text-xs text-blue-800 font-medium mb-2">Default Test Accounts:</p>
-          <div className="text-xs text-blue-700 space-y-1">
-            <div>• Staff: <code>cashier1</code> / <code>password123</code></div>
-            <div>• Manager: <code>manager1</code> / <code>manager123</code></div>
-            <div>• Owner: <code>owner</code> / <code>owner123</code></div>
-          </div>
-        </div>
       </div>
     </div>
   );
