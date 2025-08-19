@@ -322,11 +322,26 @@ const SettingsView: React.FC = () => {
                     onChange={(e) => setSystemSettings({ ...systemSettings, currency: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
+                    <option value="USD">USD ($) - US Dollar</option>
                     <option value="PHP">PHP (₱) - Philippine Peso</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
-                    <option value="CAD">CAD (C$)</option>
+                    <option value="EUR">EUR (€) - Euro</option>
+                    <option value="GBP">GBP (£) - British Pound</option>
+                    <option value="CAD">CAD (C$) - Canadian Dollar</option>
+                    <option value="AUD">AUD (A$) - Australian Dollar</option>
+                    <option value="JPY">JPY (¥) - Japanese Yen</option>
+                    <option value="CNY">CNY (¥) - Chinese Yuan</option>
+                    <option value="INR">INR (₹) - Indian Rupee</option>
+                    <option value="SGD">SGD (S$) - Singapore Dollar</option>
+                    <option value="MYR">MYR (RM) - Malaysian Ringgit</option>
+                    <option value="THB">THB (฿) - Thai Baht</option>
+                    <option value="IDR">IDR (Rp) - Indonesian Rupiah</option>
+                    <option value="VND">VND (₫) - Vietnamese Dong</option>
+                    <option value="KRW">KRW (₩) - South Korean Won</option>
+                    <option value="BRL">BRL (R$) - Brazilian Real</option>
+                    <option value="MXN">MXN ($) - Mexican Peso</option>
+                    <option value="ZAR">ZAR (R) - South African Rand</option>
+                    <option value="TRY">TRY (₺) - Turkish Lira</option>
+                    <option value="RUB">RUB (₽) - Russian Ruble</option>
                   </select>
                 </div>
                 
