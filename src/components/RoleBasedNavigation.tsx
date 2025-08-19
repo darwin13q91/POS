@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShoppingCart, 
   Package, 
@@ -13,11 +13,22 @@ import {
   Code,
   HeadphonesIcon,
   Crown,
-  UserCog
+  UserCog,
+  DollarSign,
+  Clock,
+  UserPlus
 } from 'lucide-react';
 import { usePOSStore } from '../lib/store';
 import { getMaintenanceService } from '../lib/remote-maintenance';
 import { authService, type UserRole, type User } from '../lib/auth';
+import { DateUtils } from '../utils/dateUtils';
+
+interface NavigationItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles: string[];
+}
 
 interface RoleBasedNavigationProps {
   currentUser: User;
@@ -30,90 +41,139 @@ const RoleBasedNavigation: React.FC<RoleBasedNavigationProps> = ({
 }) => {
   const { currentView, setCurrentView } = usePOSStore();
   const [showMaintenanceInfo, setShowMaintenanceInfo] = useState(false);
+  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
   const maintenanceService = getMaintenanceService();
 
-  // Define navigation items based on user role and permissions
-  const getNavigationItems = () => {
-    const baseItems = [];
+  // Load navigation items on component mount and when user changes
+  useEffect(() => {
+    const loadNavigationItems = async () => {
+      try {
+        const baseItems = [];
 
-    // POS - Available to all roles
-    if (authService.canAccessModule('pos')) {
-      baseItems.push({ 
-        id: 'pos', 
-        label: 'POS', 
-        icon: ShoppingCart,
-        roles: ['staff', 'manager', 'owner', 'developer']
-      });
-    }
+        // POS - Available to all roles
+        if (await authService.canAccessModule('pos')) {
+          baseItems.push({ 
+            id: 'pos', 
+            label: 'POS', 
+            icon: ShoppingCart,
+            roles: ['staff', 'manager', 'owner', 'developer']
+          });
+        }
 
-    // Inventory - Limited for staff
-    if (authService.canAccessModule('inventory')) {
-      baseItems.push({ 
-        id: 'inventory', 
-        label: 'Inventory', 
-        icon: Package,
-        roles: ['staff', 'manager', 'owner', 'developer', 'support']
-      });
-    }
+        // Inventory - Limited for staff
+        if (await authService.canAccessModule('inventory')) {
+          baseItems.push({ 
+            id: 'inventory', 
+            label: 'Inventory', 
+            icon: Package,
+            roles: ['staff', 'manager', 'owner', 'developer', 'support']
+          });
+        }
 
-    // Sales/Analytics - Not for basic staff
-    if (authService.canAccessModule('reports')) {
-      baseItems.push({ 
-        id: 'sales', 
-        label: currentUser.role === 'owner' ? 'Business Analytics' : 'Sales Reports', 
-        icon: BarChart3,
-        roles: ['manager', 'owner', 'developer', 'support']
-      });
-    }
+        // Sales/Analytics - Not for basic staff
+        if (await authService.canAccessModule('reports')) {
+          baseItems.push({ 
+            id: 'sales', 
+            label: currentUser.role === 'owner' ? 'Business Analytics' : 'Sales Reports', 
+            icon: BarChart3,
+            roles: ['manager', 'owner', 'developer', 'support']
+          });
+        }
 
-    // Customers
-    if (authService.canAccessModule('customers')) {
-      baseItems.push({ 
-        id: 'customers', 
-        label: 'Customers', 
-        icon: Users,
-        roles: ['staff', 'manager', 'owner', 'developer']
-      });
-    }
+        // Customers
+        if (await authService.canAccessModule('customers')) {
+          baseItems.push({ 
+            id: 'customers', 
+            label: 'Customers', 
+            icon: Users,
+            roles: ['staff', 'manager', 'owner', 'developer']
+          });
+        }
 
-    // Settings - Role-specific access
-    if (authService.canAccessModule('settings')) {
-      let settingsLabel = 'Settings';
-      if (currentUser.role === 'owner') settingsLabel = 'Business Settings';
-      if (currentUser.role === 'developer') settingsLabel = 'System Settings';
-      
-      baseItems.push({ 
-        id: 'settings', 
-        label: settingsLabel, 
-        icon: Settings,
-        roles: ['manager', 'owner', 'developer', 'support']
-      });
-    }
+        // Settings - Role-specific access
+        if (await authService.canAccessModule('settings')) {
+          let settingsLabel = 'Settings';
+          if (currentUser.role === 'owner') settingsLabel = 'Business Settings';
+          if (currentUser.role === 'developer') settingsLabel = 'System Settings';
+          
+          baseItems.push({ 
+            id: 'settings', 
+            label: settingsLabel, 
+            icon: Settings,
+            roles: ['manager', 'owner', 'developer', 'support']
+          });
+        }
 
-    // Developer-specific items
-    if (currentUser.role === 'developer') {
-      baseItems.push({
-        id: 'debug',
-        label: 'Debug Console',
-        icon: Code,
-        roles: ['developer']
-      });
-    }
+        // Payroll - Manager and Owner only
+        if (currentUser.role === 'manager' || currentUser.role === 'owner') {
+          baseItems.push({
+            id: 'payroll',
+            label: 'Payroll',
+            icon: DollarSign,
+            roles: ['manager', 'owner']
+          });
 
-    // Support-specific items
-    if (currentUser.role === 'support') {
-      baseItems.push({
-        id: 'support',
-        label: 'Support Dashboard',
-        icon: HeadphonesIcon,
-        roles: ['support']
-      });
-    }
+          baseItems.push({
+            id: 'employees',
+            label: 'Employees',
+            icon: UserPlus,
+            roles: ['manager', 'owner']
+          });
+        }
 
-    return baseItems.filter(item => 
-      item.roles.includes(currentUser.role)
-    );
-  };
+        // Time Tracking - Available to staff, managers, and owners
+        if (currentUser.role === 'staff' || currentUser.role === 'manager' || currentUser.role === 'owner') {
+          baseItems.push({
+            id: 'timetracking',
+            label: 'Time Tracking',
+            icon: Clock,
+            roles: ['staff', 'manager', 'owner']
+          });
+        }
+
+        // Developer-specific items
+        if (currentUser.role === 'developer') {
+          baseItems.push({
+            id: 'debug',
+            label: 'Debug Console',
+            icon: Code,
+            roles: ['developer']
+          });
+        }
+
+        // Support-specific items
+        if (currentUser.role === 'support') {
+          baseItems.push({
+            id: 'support',
+            label: 'Support Dashboard',
+            icon: HeadphonesIcon,
+            roles: ['support']
+          });
+        }
+
+        // SuperAdmin-specific items
+        if (currentUser.role === 'superadmin') {
+          baseItems.push({
+            id: 'system',
+            label: 'System Control',
+            icon: Shield,
+            roles: ['superadmin']
+          });
+        }
+
+        const filteredItems = baseItems.filter(item => 
+          item.roles.includes(currentUser.role)
+        );
+        
+        setNavigationItems(filteredItems);
+      } catch (error) {
+        console.error('Error loading navigation items:', error);
+        setNavigationItems([]);
+      }
+    };
+
+    loadNavigationItems();
+  }, [currentUser.role]);
 
   const handleMaintenanceTest = () => {
     setShowMaintenanceInfo(!showMaintenanceInfo);
@@ -130,6 +190,7 @@ const RoleBasedNavigation: React.FC<RoleBasedNavigationProps> = ({
       case 'owner': return <Crown className="h-4 w-4" />;
       case 'developer': return <Code className="h-4 w-4" />;
       case 'support': return <HeadphonesIcon className="h-4 w-4" />;
+      case 'superadmin': return <Shield className="h-4 w-4" />;
       default: return <Shield className="h-4 w-4" />;
     }
   };
@@ -141,11 +202,10 @@ const RoleBasedNavigation: React.FC<RoleBasedNavigationProps> = ({
       case 'owner': return 'text-purple-600 bg-purple-50';
       case 'developer': return 'text-orange-600 bg-orange-50';
       case 'support': return 'text-red-600 bg-red-50';
+      case 'superadmin': return 'text-red-800 bg-red-100 border border-red-200';
       default: return 'text-gray-600 bg-gray-50';
     }
   };
-
-  const navigationItems = getNavigationItems();
 
   return (
     <nav className="bg-white border-r border-gray-200 w-64 min-h-screen flex flex-col">
@@ -229,7 +289,7 @@ const RoleBasedNavigation: React.FC<RoleBasedNavigationProps> = ({
       <div className="mt-auto p-6 border-t border-gray-200">
         <div className="text-sm text-gray-500 mb-3">
           <div>Business ID: {currentUser.businessId}</div>
-          <div>Last Login: {currentUser.lastLogin?.toLocaleDateString()}</div>
+          <div>Last Login: {DateUtils.formatDate(currentUser.lastLogin)}</div>
         </div>
         
         <button

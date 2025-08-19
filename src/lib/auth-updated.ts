@@ -74,7 +74,6 @@ function getAccessLevel(role: UserRole): number {
     case 'owner': return 3;
     case 'developer': return 4;
     case 'support': return 5;
-    case 'superadmin': return 10; // Highest level access
     default: return 1;
   }
 }
@@ -249,47 +248,8 @@ export class AuthService {
     return this.hasPermission(module, action);
   }
 
-  async canAccessModule(module: string): Promise<boolean> {
-    if (!this.currentUser) return false;
-    
-    // Check if user has any permissions for this module
-    return db.hasPermission(this.currentUser.role, module, 'read') || 
-           db.hasPermission(this.currentUser.role, module, 'view') ||
-           db.hasPermission(this.currentUser.role, module, 'create');
-  }
-
   isLoggedIn(): boolean {
     return this.currentUser !== null;
-  }
-
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
-    try {
-      // Get user from database by finding it in the appUsers table
-      const users = await db.appUsers.toArray();
-      const dbUser = users.find(u => u.userId === userId);
-      if (!dbUser) {
-        return false;
-      }
-
-      // Verify current password
-      if (!dbUser.passwordHash || !this.verifyPassword(currentPassword, dbUser.passwordHash)) {
-        return false;
-      }
-
-      // Hash new password
-      const newPasswordHash = this.hashPassword(newPassword);
-
-      // Update password in database
-      await db.appUsers.update(dbUser.userId, { 
-        passwordHash: newPasswordHash,
-        lastPasswordChange: new Date()
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Change password error:', error);
-      return false;
-    }
   }
 
   // User management methods (for admin/owner roles)

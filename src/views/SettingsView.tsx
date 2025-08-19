@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Store, Database, Wifi, Download, Trash2, RefreshCw } from 'lucide-react';
+import { Settings, Store, Database, Download, RefreshCw, Users } from 'lucide-react';
 import { db } from '../lib/database';
+import UserManagement from '../components/UserManagement';
 
 const SettingsView: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('business');
   const [businessInfo, setBusinessInfo] = useState({
     name: 'Modern POS',
     address: '123 Main Street, City',
@@ -12,7 +14,7 @@ const SettingsView: React.FC = () => {
   });
   
   const [systemSettings, setSystemSettings] = useState({
-    currency: 'USD',
+    currency: 'PHP',
     theme: 'light',
     receiptPrinter: 'default',
     lowStockThreshold: '10'
@@ -116,6 +118,8 @@ const SettingsView: React.FC = () => {
     }
   };
 
+  // Commented out unused functions to avoid TypeScript errors
+  /*
   const clearAllData = async () => {
     if (window.confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
       try {
@@ -162,6 +166,7 @@ const SettingsView: React.FC = () => {
       }
     }
   };
+  */
 
   const resetToDefaults = async () => {
     if (window.confirm('Reset to default settings and sample data?')) {
@@ -204,287 +209,241 @@ const SettingsView: React.FC = () => {
         <p className="text-gray-600">Configure your POS system</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Business Information */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center space-x-2 mb-4">
-            <Store className="h-5 w-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Business Information</h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
-              <input
-                type="text"
-                value={businessInfo.name}
-                onChange={(e) => setBusinessInfo({ ...businessInfo, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-              <input
-                type="text"
-                value={businessInfo.address}
-                onChange={(e) => setBusinessInfo({ ...businessInfo, address: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input
-                  type="text"
-                  value={businessInfo.phone}
-                  onChange={(e) => setBusinessInfo({ ...businessInfo, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+      {/* Tab Navigation */}
+      <div className="mb-6">
+        <nav className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          {[
+            { id: 'business', label: 'Business Info', icon: Store },
+            { id: 'system', label: 'System Settings', icon: Settings },
+            { id: 'users', label: 'User Management', icon: Users },
+            { id: 'data', label: 'Data Management', icon: Database }
+          ].map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        {activeTab === 'business' && (
+          <div className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Business Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                  <input
+                    type="text"
+                    value={businessInfo.name}
+                    onChange={(e) => setBusinessInfo({ ...businessInfo, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                  <input
+                    type="text"
+                    value={businessInfo.address}
+                    onChange={(e) => setBusinessInfo({ ...businessInfo, address: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  value={businessInfo.email}
-                  onChange={(e) => setBusinessInfo({ ...businessInfo, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input
+                    type="text"
+                    value={businessInfo.phone}
+                    onChange={(e) => setBusinessInfo({ ...businessInfo, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={businessInfo.email}
+                    onChange={(e) => setBusinessInfo({ ...businessInfo, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              
+              <div className="md:col-span-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tax Rate (%)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={businessInfo.taxRate}
+                    onChange={(e) => setBusinessInfo({ ...businessInfo, taxRate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent max-w-xs"
+                  />
+                </div>
+                
+                <button
+                  onClick={saveBusinessInfo}
+                  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Save Business Information
+                </button>
               </div>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tax Rate (%)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={businessInfo.taxRate}
-                onChange={(e) => setBusinessInfo({ ...businessInfo, taxRate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            
-            <button
-              onClick={saveBusinessInfo}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Save Business Information
-            </button>
           </div>
-        </div>
+        )}
 
-        {/* System Settings */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center space-x-2 mb-4">
-            <Settings className="h-5 w-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">System Settings</h2>
+        {activeTab === 'system' && (
+          <div className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">System Settings</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                  <select
+                    value={systemSettings.currency}
+                    onChange={(e) => setSystemSettings({ ...systemSettings, currency: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="PHP">PHP (₱) - Philippine Peso</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="CAD">CAD (C$)</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Theme</label>
+                  <select
+                    value={systemSettings.theme}
+                    onChange={(e) => setSystemSettings({ ...systemSettings, theme: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="auto">Auto</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Receipt Printer</label>
+                  <select
+                    value={systemSettings.receiptPrinter}
+                    onChange={(e) => setSystemSettings({ ...systemSettings, receiptPrinter: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="default">Default Printer</option>
+                    <option value="thermal">Thermal Printer</option>
+                    <option value="none">No Printer</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Low Stock Threshold</label>
+                  <input
+                    type="number"
+                    value={systemSettings.lowStockThreshold}
+                    onChange={(e) => setSystemSettings({ ...systemSettings, lowStockThreshold: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              
+              <div className="md:col-span-2">
+                <button
+                  onClick={saveSystemSettings}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Save System Settings
+                </button>
+              </div>
+            </div>
           </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-              <select
-                value={systemSettings.currency}
-                onChange={(e) => setSystemSettings({ ...systemSettings, currency: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="CAD">CAD (C$)</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Theme</label>
-              <select
-                value={systemSettings.theme}
-                onChange={(e) => setSystemSettings({ ...systemSettings, theme: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="auto">Auto</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Receipt Printer</label>
-              <select
-                value={systemSettings.receiptPrinter}
-                onChange={(e) => setSystemSettings({ ...systemSettings, receiptPrinter: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="default">Default Printer</option>
-                <option value="thermal">Thermal Printer</option>
-                <option value="none">No Printer</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Low Stock Threshold</label>
-              <input
-                type="number"
-                value={systemSettings.lowStockThreshold}
-                onChange={(e) => setSystemSettings({ ...systemSettings, lowStockThreshold: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            
-            <button
-              onClick={saveSystemSettings}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Save System Settings
-            </button>
-          </div>
-        </div>
+        )}
 
-        {/* Data Statistics */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center space-x-2 mb-4">
-            <Database className="h-5 w-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Data Overview</h2>
+        {activeTab === 'users' && (
+          <div className="p-6">
+            <UserManagement />
           </div>
-          
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{dataStats.products}</div>
-              <div className="text-sm text-gray-600">Products</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{dataStats.sales}</div>
-              <div className="text-sm text-gray-600">Sales</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{dataStats.customers}</div>
-              <div className="text-sm text-gray-600">Customers</div>
-            </div>
-          </div>
+        )}
 
-          <div className="space-y-3">
-            <button
-              onClick={exportData}
-              disabled={isExporting}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-green-400"
-            >
-              <Download className="h-4 w-4" />
-              <span>{isExporting ? 'Exporting...' : 'Export Data'}</span>
-            </button>
+        {activeTab === 'data' && (
+          <div className="p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Data Management</h2>
             
-            {lastBackup && (
-              <div className="text-xs text-gray-500 text-center">
-                Last backup: {lastBackup.toLocaleDateString()} at {lastBackup.toLocaleTimeString()}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{dataStats.products}</div>
+                <div className="text-sm text-gray-600">Products</div>
               </div>
-            )}
-          </div>
-        </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{dataStats.sales}</div>
+                <div className="text-sm text-gray-600">Sales</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">{dataStats.customers}</div>
+                <div className="text-sm text-gray-600">Customers</div>
+              </div>
+            </div>
 
-        {/* Business Templates */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center space-x-2 mb-4">
-            <Store className="h-5 w-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Business Templates</h2>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">
-            Quickly configure your POS for different business types with pre-loaded products and settings.
-          </p>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <button
-              onClick={() => loadBusinessTemplate('carDealership')}
-              className="p-4 border border-gray-300 rounded-lg text-center hover:bg-blue-50 hover:border-blue-300 transition-colors"
-            >
-              <div className="text-2xl mb-2">🚗</div>
-              <div className="font-medium text-sm">Car Dealership</div>
-            </button>
-            
-            <button
-              onClick={() => loadBusinessTemplate('coffeeShop')}
-              className="p-4 border border-gray-300 rounded-lg text-center hover:bg-blue-50 hover:border-blue-300 transition-colors"
-            >
-              <div className="text-2xl mb-2">☕</div>
-              <div className="font-medium text-sm">Coffee Shop</div>
-            </button>
-            
-            <button
-              onClick={() => loadBusinessTemplate('restaurant')}
-              className="p-4 border border-gray-300 rounded-lg text-center hover:bg-blue-50 hover:border-blue-300 transition-colors"
-            >
-              <div className="text-2xl mb-2">🍽️</div>
-              <div className="font-medium text-sm">Restaurant</div>
-            </button>
-            
-            <button
-              onClick={() => loadBusinessTemplate('convenienceStore')}
-              className="p-4 border border-gray-300 rounded-lg text-center hover:bg-blue-50 hover:border-blue-300 transition-colors"
-            >
-              <div className="text-2xl mb-2">🏪</div>
-              <div className="font-medium text-sm">Convenience Store</div>
-            </button>
-          </div>
-        </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <h3 className="font-medium text-gray-900">Export Data</h3>
+                  <p className="text-sm text-gray-600">Download all data as JSON backup</p>
+                </div>
+                <button
+                  onClick={exportData}
+                  disabled={isExporting}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>{isExporting ? 'Exporting...' : 'Export'}</span>
+                </button>
+              </div>
 
-        {/* System Actions */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center space-x-2 mb-4">
-            <Wifi className="h-5 w-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">System Actions</h2>
-          </div>
-          
-          <div className="space-y-3">
-            <button
-              id="pwa-install-button"
-              style={{ display: 'none' }}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              <span>Install App</span>
-            </button>
-            
-            <button
-              onClick={resetToDefaults}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <RefreshCw className="h-4 w-4" />
-              <span>Reset to Defaults</span>
-            </button>
-            
-            <button
-              onClick={clearAllData}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Clear All Data</span>
-            </button>
-          </div>
-          
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Application Status</h3>
-            <div className="space-y-1 text-xs text-gray-600">
-              <div className="flex justify-between">
-                <span>Database:</span>
-                <span className="text-green-600">Connected</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Network:</span>
-                <span className={navigator.onLine ? 'text-green-600' : 'text-red-600'}>
-                  {navigator.onLine ? 'Online' : 'Offline'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>PWA:</span>
-                <span className="text-green-600">Active</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Version:</span>
-                <span>1.0.0</span>
+              {lastBackup && (
+                <div className="text-sm text-gray-600">
+                  Last backup: {lastBackup.toLocaleString()}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+                <div>
+                  <h3 className="font-medium text-gray-900">Reset Database</h3>
+                  <p className="text-sm text-gray-600">Reset to default settings and sample data</p>
+                </div>
+                <button
+                  onClick={resetToDefaults}
+                  className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>Reset</span>
+                </button>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

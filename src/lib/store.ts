@@ -17,7 +17,7 @@ interface POSState {
   cartTotal: number;
   
   // UI State
-  currentView: 'pos' | 'inventory' | 'sales' | 'customers' | 'settings' | 'debug' | 'support';
+  currentView: 'pos' | 'inventory' | 'sales' | 'customers' | 'settings' | 'debug' | 'support' | 'payroll' | 'employees' | 'timetracking' | 'system';
   currentSale: Sale | null;
   isProcessingPayment: boolean;
   selectedCustomer: Customer | null;
