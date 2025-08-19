@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, Smartphone } from 'lucide-react';
 import { usePOSStore } from '../lib/store';
 import { db, type Sale, type Product } from '../lib/database';
+import { formatCurrency } from '../lib/currency';
 import Receipt from './Receipt';
 
 const Cart: React.FC = () => {
@@ -92,7 +93,7 @@ const Cart: React.FC = () => {
             
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">{item.productName}</h3>
-              <p className="text-sm text-gray-600">${item.price.toFixed(2)} each</p>
+              <p className="text-sm text-gray-600">{formatCurrency(item.price)} each</p>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -112,7 +113,7 @@ const Cart: React.FC = () => {
             </div>
             
             <div className="text-right">
-              <p className="font-semibold text-gray-900">${item.total.toFixed(2)}</p>
+              <p className="font-semibold text-gray-900">{formatCurrency(item.total)}</p>
               <button
                 onClick={() => removeFromCart(item.productId)}
                 className="text-red-600 hover:text-red-700 text-sm"
@@ -127,15 +128,15 @@ const Cart: React.FC = () => {
       <div className="border-t pt-4 space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Subtotal:</span>
-          <span className="font-medium">${subtotal.toFixed(2)}</span>
+          <span className="font-medium">{formatCurrency(subtotal)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Tax (8%):</span>
-          <span className="font-medium">${tax.toFixed(2)}</span>
+          <span className="font-medium">{formatCurrency(tax)}</span>
         </div>
         <div className="flex justify-between text-lg font-bold border-t pt-2">
           <span>Total:</span>
-          <span className="text-blue-600">${total.toFixed(2)}</span>
+          <span className="text-blue-600">{formatCurrency(total)}</span>
         </div>
       </div>
 

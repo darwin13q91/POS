@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Minus } from 'lucide-react';
 import { usePOSStore } from '../lib/store';
 import { db, type Product, type Category } from '../lib/database';
+import { formatCurrency } from '../lib/currency';
 
 const ProductGrid: React.FC = () => {
   const {
@@ -156,7 +157,7 @@ const ProductGrid: React.FC = () => {
               
               <div className="flex items-center justify-between mb-2">
                 <span className="text-lg font-bold text-blue-600">
-                  ${product.price.toFixed(2)}
+                  {formatCurrency(product.price)}
                 </span>
                 <span className="text-sm text-gray-500">
                   Stock: {product.stock}

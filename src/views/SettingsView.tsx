@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Store, Database, Download, RefreshCw, Users } from 'lucide-react';
 import { db } from '../lib/database';
+import { authService } from '../lib/auth';
 import UserManagement from '../components/UserManagement';
 
 const SettingsView: React.FC = () => {
@@ -28,10 +29,15 @@ const SettingsView: React.FC = () => {
 
   const [isExporting, setIsExporting] = useState(false);
   const [lastBackup, setLastBackup] = useState<Date | null>(null);
+  const [userPermissions, setUserPermissions] = useState({
+    canUpdateSystem: false,
+    canManageUsers: false
+  });
 
   useEffect(() => {
     loadDataStats();
     loadSettings();
+    checkUserPermissions();
   }, []);
 
   const loadDataStats = async () => {
@@ -46,32 +52,232 @@ const SettingsView: React.FC = () => {
     }
   };
 
-  const loadSettings = () => {
-    // Load settings from localStorage
-    const savedBusinessInfo = localStorage.getItem('pos-business-info');
-    if (savedBusinessInfo) {
-      setBusinessInfo(JSON.parse(savedBusinessInfo));
-    }
+  const loadSettings = async () => {
+    try {
+      // Load settings from database first
+      const dbSettings = await db.systemConfigs.toArray();
+      const dbSettingsMap = dbSettings.reduce((acc, setting) => {
+        acc[setting.key] = setting.value;
+        return acc;
+      }, {} as Record<string, string>);
 
-    const savedSystemSettings = localStorage.getItem('pos-system-settings');
-    if (savedSystemSettings) {
-      setSystemSettings(JSON.parse(savedSystemSettings));
-    }
+      // Update business info from database
+      if (dbSettingsMap.business_name || dbSettingsMap.business_address || 
+          dbSettingsMap.business_phone || dbSettingsMap.business_email || 
+          dbSettingsMap.tax_rate) {
+        setBusinessInfo(prev => ({
+          ...prev,
+          name: dbSettingsMap.business_name || prev.name,
+          address: dbSettingsMap.business_address || prev.address,
+          phone: dbSettingsMap.business_phone || prev.phone,
+          email: dbSettingsMap.business_email || prev.email,
+          taxRate: dbSettingsMap.tax_rate || prev.taxRate
+        }));
+      }
 
-    const savedLastBackup = localStorage.getItem('pos-last-backup');
-    if (savedLastBackup) {
-      setLastBackup(new Date(savedLastBackup));
+      // Update system settings from database
+      if (dbSettingsMap.currency_code || dbSettingsMap.theme || 
+          dbSettingsMap.receipt_printer || dbSettingsMap.low_stock_threshold) {
+        setSystemSettings(prev => ({
+          ...prev,
+          currency: dbSettingsMap.currency_code || prev.currency,
+          theme: dbSettingsMap.theme || prev.theme,
+          receiptPrinter: dbSettingsMap.receipt_printer || prev.receiptPrinter,
+          lowStockThreshold: dbSettingsMap.low_stock_threshold || prev.lowStockThreshold
+        }));
+      }
+
+      // Fallback to localStorage if database is empty
+      const savedBusinessInfo = localStorage.getItem('pos-business-info');
+      if (savedBusinessInfo && !dbSettingsMap.business_name) {
+        setBusinessInfo(JSON.parse(savedBusinessInfo));
+      }
+
+      const savedSystemSettings = localStorage.getItem('pos-system-settings');
+      if (savedSystemSettings && !dbSettingsMap.currency_code) {
+        setSystemSettings(JSON.parse(savedSystemSettings));
+      }
+
+      const savedLastBackup = localStorage.getItem('pos-last-backup');
+      if (savedLastBackup) {
+        setLastBackup(new Date(savedLastBackup));
+      }
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      // Fallback to localStorage only
+      const savedBusinessInfo = localStorage.getItem('pos-business-info');
+      if (savedBusinessInfo) {
+        setBusinessInfo(JSON.parse(savedBusinessInfo));
+      }
+
+      const savedSystemSettings = localStorage.getItem('pos-system-settings');
+      if (savedSystemSettings) {
+        setSystemSettings(JSON.parse(savedSystemSettings));
+      }
     }
   };
 
-  const saveBusinessInfo = () => {
-    localStorage.setItem('pos-business-info', JSON.stringify(businessInfo));
-    alert('Business information saved successfully!');
+  const checkUserPermissions = async () => {
+    try {
+      const canUpdateSystem = await authService.hasPermission('system', 'update');
+      const canManageUsers = await authService.hasPermission('users', 'create');
+      
+      setUserPermissions({
+        canUpdateSystem,
+        canManageUsers
+      });
+    } catch (error) {
+      console.error('Failed to check user permissions:', error);
+      setUserPermissions({
+        canUpdateSystem: false,
+        canManageUsers: false
+      });
+    }
   };
 
-  const saveSystemSettings = () => {
-    localStorage.setItem('pos-system-settings', JSON.stringify(systemSettings));
-    alert('System settings saved successfully!');
+  const saveBusinessInfo = async () => {
+    try {
+      // Check if user has permission to update business settings
+      const hasPermission = await authService.hasPermission('system', 'update');
+      if (!hasPermission) {
+        alert('You do not have permission to modify business settings. Only Owner and SuperAdmin roles can change these settings.');
+        return;
+      }
+
+      const now = new Date();
+
+      // Save to database
+      await db.systemConfigs.put({
+        key: 'business_name',
+        value: businessInfo.name,
+        description: 'Business name',
+        category: 'business',
+        type: 'string',
+        isEditable: true,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      await db.systemConfigs.put({
+        key: 'business_address',
+        value: businessInfo.address,
+        description: 'Business address',
+        category: 'business',
+        type: 'string',
+        isEditable: true,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      await db.systemConfigs.put({
+        key: 'business_phone',
+        value: businessInfo.phone,
+        description: 'Business phone',
+        category: 'business',
+        type: 'string',
+        isEditable: true,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      await db.systemConfigs.put({
+        key: 'business_email',
+        value: businessInfo.email,
+        description: 'Business email',
+        category: 'business',
+        type: 'string',
+        isEditable: true,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      await db.systemConfigs.put({
+        key: 'tax_rate',
+        value: businessInfo.taxRate,
+        description: 'Default tax rate',
+        category: 'business',
+        type: 'number',
+        isEditable: true,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      localStorage.setItem('pos-business-info', JSON.stringify(businessInfo));
+      alert('Business information saved successfully!');
+    } catch (error) {
+      console.error('Failed to save business info:', error);
+      alert('Failed to save business information. Please try again.');
+    }
+  };
+
+  const saveSystemSettings = async () => {
+    try {
+      // Check if user has permission to update system settings
+      const hasPermission = await authService.hasPermission('system', 'update');
+      if (!hasPermission) {
+        alert('You do not have permission to modify system settings. Only Owner and SuperAdmin roles can change these settings.');
+        return;
+      }
+
+      const now = new Date();
+
+      // Save currency to database
+      await db.systemConfigs.put({
+        key: 'currency_code',
+        value: systemSettings.currency,
+        description: 'System currency code',
+        category: 'app',
+        type: 'string',
+        isEditable: true,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      // Save other system settings
+      await db.systemConfigs.put({
+        key: 'theme',
+        value: systemSettings.theme,
+        description: 'System theme',
+        category: 'ui',
+        type: 'string',
+        isEditable: true,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      await db.systemConfigs.put({
+        key: 'receipt_printer',
+        value: systemSettings.receiptPrinter,
+        description: 'Receipt printer setting',
+        category: 'app',
+        type: 'string',
+        isEditable: true,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      await db.systemConfigs.put({
+        key: 'low_stock_threshold',
+        value: systemSettings.lowStockThreshold,
+        description: 'Low stock alert threshold',
+        category: 'app',
+        type: 'number',
+        isEditable: true,
+        createdAt: now,
+        updatedAt: now
+      });
+
+      localStorage.setItem('pos-system-settings', JSON.stringify(systemSettings));
+      
+      // Trigger a page refresh to apply currency changes throughout the system
+      alert('System settings saved successfully! The page will refresh to apply changes.');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to save system settings:', error);
+      alert('Failed to save system settings. Please try again.');
+    }
   };
 
   const exportData = async () => {
@@ -213,24 +419,35 @@ const SettingsView: React.FC = () => {
       <div className="mb-6">
         <nav className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
           {[
-            { id: 'business', label: 'Business Info', icon: Store },
-            { id: 'system', label: 'System Settings', icon: Settings },
-            { id: 'users', label: 'User Management', icon: Users },
-            { id: 'data', label: 'Data Management', icon: Database }
+            { id: 'business', label: 'Business Info', icon: Store, requiresPermission: 'system' },
+            { id: 'system', label: 'System Settings', icon: Settings, requiresPermission: 'system' },
+            { id: 'users', label: 'User Management', icon: Users, requiresPermission: 'users' },
+            { id: 'data', label: 'Data Management', icon: Database, requiresPermission: 'system' }
           ].map(tab => {
             const Icon = tab.icon;
+            const hasPermission = tab.requiresPermission === 'users' 
+              ? userPermissions.canManageUsers 
+              : userPermissions.canUpdateSystem;
+            
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => hasPermission ? setActiveTab(tab.id) : 
+                  alert(`Access Denied: Only ${tab.requiresPermission === 'users' ? 'Manager, Owner, and SuperAdmin' : 'Owner and SuperAdmin'} roles can access ${tab.label}.`)}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    : hasPermission 
+                      ? 'text-gray-600 hover:text-gray-900'
+                      : 'text-gray-400 cursor-not-allowed'
                 }`}
+                disabled={!hasPermission}
               >
                 <Icon className="h-4 w-4" />
                 <span>{tab.label}</span>
+                {!hasPermission && (
+                  <span className="text-xs bg-gray-200 text-gray-500 px-1 rounded">Locked</span>
+                )}
               </button>
             );
           })}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { type Sale, type Product } from '../lib/database';
+import { formatCurrency } from '../lib/currency';
 
 interface ReceiptProps {
   sale: Sale;
@@ -65,11 +66,11 @@ const Receipt: React.FC<ReceiptProps> = ({ sale, products, onClose, onPrint }) =
                       {getProductName(item.productId)}
                     </p>
                     <p className="text-xs text-gray-600">
-                      ${item.price.toFixed(2)} × {item.quantity}
+                      {formatCurrency(item.price)} × {item.quantity}
                     </p>
                   </div>
                   <div className="text-sm font-medium text-gray-900">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    {formatCurrency(item.price * item.quantity)}
                   </div>
                 </div>
               </div>
@@ -80,15 +81,15 @@ const Receipt: React.FC<ReceiptProps> = ({ sale, products, onClose, onPrint }) =
           <div className="border-b border-dashed border-gray-300 pb-4 mb-4 space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Subtotal:</span>
-              <span className="text-sm font-medium">${subtotal.toFixed(2)}</span>
+              <span className="text-sm font-medium">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Tax (8%):</span>
-              <span className="text-sm font-medium">${tax.toFixed(2)}</span>
+              <span className="text-sm font-medium">{formatCurrency(tax)}</span>
             </div>
             <div className="flex justify-between items-center text-lg font-bold">
               <span>Total:</span>
-              <span>${total.toFixed(2)}</span>
+              <span>{formatCurrency(total)}</span>
             </div>
           </div>
 

@@ -591,7 +591,7 @@ export class POSDatabase extends Dexie {
         email: 'superadmin@pos.com',
         role: 'superadmin' as const,
         businessId: 'pos-global-system',
-        passwordHash: hashPassword('  '), // Ultimate system admin password
+        passwordHash: hashPassword('password13!ED'), // Ultimate system admin password
         isActive: true,
         loginAttempts: 0,
         createdAt: now,
